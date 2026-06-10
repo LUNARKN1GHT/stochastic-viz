@@ -41,6 +41,9 @@ select = [
 ignore = [
     "ANN101",   # self 不需要标注类型
     "ANN102",   # cls 不需要标注类型
+    "ANN201",   # construct 等 Manim 入口方法返回 None，不标
+    "F403",     # from manim import * 是 Manim 官方惯例
+    "F405",     # * 导入后名字可能来自 manim，误报
 ]
 
 [tool.ruff.lint.isort]
