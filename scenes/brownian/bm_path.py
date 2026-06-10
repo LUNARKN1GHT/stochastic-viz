@@ -12,13 +12,14 @@ from utils.style import (
     AXIS_COLOR,
     AXIS_LABEL_COLOR,
     AXIS_STROKE,
+    DIM_OPACITY,
     PATH_COLORS,
     PATH_STROKE,
 )
 
-# 模拟参数
 N_STEPS = 800
 T = 1.0
+N_PATHS = 5
 SEED = 42
 
 
@@ -32,7 +33,7 @@ class BrownianPath(Scene):
 
         # ── 坐标轴 ──────────────────────────────────────────────────────────
         axes = Axes(
-            x_range=[0, T, 0.25],  # [最小值, 最大值, 刻度间隔]
+            x_range=[0, T, 0.25],
             y_range=[-2.5, 2.5, 1.0],
             x_length=10,
             y_length=5,
@@ -44,19 +45,38 @@ class BrownianPath(Scene):
         )
         x_label = axes.get_x_axis_label(MathTex("t", color=AXIS_LABEL_COLOR), edge=RIGHT)
         y_label = axes.get_y_axis_label(MathTex("W_t", color=AXIS_LABEL_COLOR), edge=UP)
-
         self.play(Create(axes), Write(x_label), Write(y_label))
 
-        # ── 模拟并转换坐标 ───────────────────────────────────────────────────
-        t, paths = simulate_bm(n_steps=N_STEPS, T=T, n_paths=1, seed=SEED)
+        # ── 模拟多条路径 ─────────────────────────────────────────────────────
+        t, paths = simulate_bm(n_steps=N_STEPS, T=T, n_paths=N_PATHS, seed=SEED)
 
-        # axes.c2p(x, y) 把数据坐标 → Manim 场景坐标（canvas position）
-        points = [axes.c2p(t[i], paths[0, i]) for i in range(len(t))]
+        path_mobs = []
+        for k in range(N_PATHS):
+            points = [axes.c2p(t[i], paths[k, i]) for i in range(len(t))]
+            mob = VMobject(
+                stroke_width=PATH_STROKE,
+                color=PATH_COLORS[k % len(PATH_COLORS)],
+            )
+            mob.set_points_as_corners(points)
+            path_mobs.append(mob)
 
-        # set_points_as_corners：折线连接，保留锯齿感（布朗运动不光滑）
-        path_mob = VMobject(stroke_width=PATH_STROKE, color=PATH_COLORS[0])
-        path_mob.set_points_as_corners(points)
+        # 所有路径同时画出
+        self.play(
+            *[Create(m) for m in path_mobs],
+            run_time=4,
+            rate_func=linear,
+        )
 
-        # ── 动画：路径从左向右逐步画出 ───────────────────────────────────────
-        self.play(Create(path_mob), run_time=4, rate_func=linear)
+        # ── 压暗其他路径，高亮第一条 ─────────────────────────────────────────
+        self.play(
+            *[m.animate.set_opacity(DIM_OPACITY) for m in path_mobs[1:]],
+            run_time=0.8,
+        )
         self.wait(1)
+
+        # 恢复所有路径
+        self.play(
+            *[m.animate.set_opacity(1.0) for m in path_mobs[1:]],
+            run_time=0.8,
+        )
+        self.wait(0.5)
