@@ -65,3 +65,31 @@ def simulate_random_walk(
     path = np.concatenate([[0.0], np.cumsum(steps) / np.sqrt(n)])
     t = np.linspace(0.0, T, n + 1)
     return t, path
+
+
+def simulate_markov_chain(
+    P: np.ndarray,
+    n_steps: int = 50,
+    init_state: int = 0,
+    seed: int | None = None,
+) -> np.ndarray:
+    """模拟离散时间马尔可夫链
+
+    Args:
+        P (np.ndarray): 转移矩阵，每行之和为1
+        n_steps (int, optional): 模拟步数. Defaults to 50.
+        init_state (int, optional): 出事状态索引. Defaults to 0.
+        seed (int | None, optional): 随机种子. Defaults to None.
+
+    Returns:
+        np.ndarray: _description_
+    """
+    rng = np.random.default_rng(seed=seed)
+    n_states = P.shape[0]
+    states = np.empty(n_steps + 1, dtype=int)
+    states[0] = init_state
+
+    for i in range(n_steps):
+        states[i + 1] = rng.choice(n_states, p=P[states[i]])
+
+    return states
