@@ -39,3 +39,29 @@ def simulate_bm(
 
     t = np.linspace(0.0, T, n_steps + 1)
     return t, paths
+
+
+def simulate_random_walk(
+    n: int = 50,
+    T: float = 1.0,
+    seed: int | None = None,
+) -> tuple[np.ndarray, np.ndarray]:
+    """模拟 Donsker 定理中的缩放随机游走。
+
+    构造：X_i = ±1 等概率，缩放后
+        S_n(t) = (1/√n) * Σ X_i，i = 1..⌊nt⌋
+    当 n → ∞ 时依分布收敛到标准布朗运动。
+
+    Args:
+        n (int, optional): 步数（越大越接近布朗运动）. Defaults to 50.
+        T (float, optional): 终止时间. Defaults to 1.0.
+        seed (int | None, optional): 随机种子. Defaults to None.
+
+    Returns:
+        tuple[np.ndarray, np.ndarray]: _description_
+    """
+    rng = np.random.default_rng(seed)
+    steps = rng.choice([-1.0, 1.0], size=n)
+    path = np.concatenate([[0.0], np.cumsum(steps) / np.sqrt(n)])
+    t = np.linspace(0.0, T, n + 1)
+    return t, path
