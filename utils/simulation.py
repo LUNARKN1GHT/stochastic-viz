@@ -93,3 +93,16 @@ def simulate_markov_chain(
         states[i + 1] = rng.choice(n_states, p=P[states[i]])
 
     return states
+
+
+def stationary_distribution(P: np.ndarray) -> np.ndarray:
+    """
+    计算转移矩阵 P 的平稳分布 π。
+
+    求解 πP = π，等价于求 (P^T - I) 的零空间。
+    用特征值分解：特征值为 1 对应的左特征向量即为 π。
+    """
+    eigenvalues, eigenvectors = np.linalg.eig(P.T)
+    idx = np.argmin(np.abs(eigenvalues - 1.0))
+    pi = np.real(eigenvectors[:, idx])
+    return pi / pi.sum()
